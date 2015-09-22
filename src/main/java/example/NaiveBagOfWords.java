@@ -5,15 +5,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
-import core.Processor;
+import core.Analyser;
 
 /**
  * TODO Add some meaningful class description...
  */
-public class NaiveBagOfWords implements Processor<Path, String> {
+public class NaiveBagOfWords implements Analyser<Path, String> {
 
 	@Override
-	public Collection<String> analyse(Path path) {
+	public Collection<String> process(Path path) {
 		Objects.requireNonNull(path);
 
 		List<String> result = new ArrayList<>();

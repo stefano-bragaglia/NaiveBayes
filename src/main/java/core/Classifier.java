@@ -15,11 +15,11 @@ import org.slf4j.LoggerFactory;
  * @param <Feature>  one of the observed features to subsume the category of the entities to be classified
  * @param <Category> one of the possible categories for the entities to be classified
  */
-public class NaiveBayes<Feature, Category> implements Serializable {
+public class Classifier<Feature, Category> implements Serializable {
 
 	private static final long serialVersionUID = 1917935569645011813L;
 
-	private static final Logger logger = LoggerFactory.getLogger(NaiveBayes.class);
+	private static final Logger logger = LoggerFactory.getLogger(Classifier.class);
 
 	/**
 	 * The features and their number of occurrences by category of this {@see Classifier}.
@@ -34,13 +34,13 @@ public class NaiveBayes<Feature, Category> implements Serializable {
 	/**
 	 * Default constructor for a {@see Classifier} initialised to the content of the given {@see Trainer}.
 	 *
-	 * @param trainer the {@see Trainer} whose features data is used to initialise this {@see Classifier}
+	 * @param builder the {@see Trainer} whose features data is used to initialise this {@see Classifier}
 	 */
-	private NaiveBayes(Trainer<Feature, Category> trainer) {
-		Objects.requireNonNull(trainer);
+	private Classifier(Builder<Feature, Category> builder) {
+		Objects.requireNonNull(builder);
 
-		features = new HashMap<>(trainer.features);
-		totals = new HashMap<>(trainer.totals);
+		features = new HashMap<>(builder.features);
+		totals = new HashMap<>(builder.totals);
 	}
 
 	/**
@@ -50,14 +50,14 @@ public class NaiveBayes<Feature, Category> implements Serializable {
 	 * @return the {@see Classifier} initialised to the content of the file at the given {@see Path}
 	 */
 	@SuppressWarnings("unchecked")
-	public static NaiveBayes<String, Language> load(Path path) {
+	public static Classifier<String, Language> load(Path path) {
 		Objects.requireNonNull(path);
 
-		NaiveBayes<String, Language> result = null;
+		Classifier<String, Language> result = null;
 		try {
 			InputStream stream = Files.newInputStream(path);
 			ObjectInputStream output = new ObjectInputStream(stream);
-			result = (NaiveBayes<String, Language>) output.readObject();
+			result = (Classifier<String, Language>) output.readObject();
 			output.close();
 			stream.close();
 		} catch (ClassNotFoundException | IOException e) {
@@ -75,24 +75,24 @@ public class NaiveBayes<Feature, Category> implements Serializable {
 	 * @param <Category>
 	 * @return
 	 */
-	public static <Sample, Feature, Category> NaiveBayes<Feature, Category> learn(
+	public static <Sample, Feature, Category> Classifier<Feature, Category> learn(
 			Dataset<Sample, Category> dataset,
-			Processor<Sample, Feature> processor,
+			Analyser<Sample, Feature> processor,
 			Variant<Feature> variant) {
 		Objects.requireNonNull(dataset);
 		Objects.requireNonNull(processor);
 		Objects.requireNonNull(variant);
 
-		Trainer<Feature, Category> trainer = new Trainer<>();
+		Builder<Feature, Category> builder = new Builder<>();
 		for (Category category : dataset.categories()) {
 			Collection<Sample> samples = dataset.getSamples(category);
 			for (Sample sample : samples) {
-				Collection<Feature> raw = processor.analyse(sample);
+				Collection<Feature> raw = processor.process(sample);
 				Map<Feature, Double> features = variant.digest(raw);
-				trainer.add(category, features);
+				builder.add(category, features);
 			}
 		}
-		return trainer.build();
+		return builder.build();
 	}
 
 	/**
@@ -106,9 +106,9 @@ public class NaiveBayes<Feature, Category> implements Serializable {
 	 * @return
 	 */
 	public static <Sample, Feature, Category> Map<Category, Map.Entry<Double, Double>> test(
-			NaiveBayes<Feature, Category> classifier,
+			Classifier<Feature, Category> classifier,
 			Dataset<Sample, Category> dataset,
-			Processor<Sample, Feature> processor,
+			Analyser<Sample, Feature> processor,
 			Variant<Feature> variant) {
 		Objects.requireNonNull(classifier);
 		Objects.requireNonNull(dataset);
@@ -121,7 +121,7 @@ public class NaiveBayes<Feature, Category> implements Serializable {
 		for (Category category : dataset.categories()) {
 			Collection<Sample> samples = dataset.getSamples(category);
 			for (Sample sample : samples) {
-				Collection<Feature> raw = processor.analyse(sample);
+				Collection<Feature> raw = processor.process(sample);
 				Map<Feature, Double> features = variant.digest(raw);
 				Category result = classifier.classify(features);
 				if (result == category) {
@@ -246,7 +246,7 @@ public class NaiveBayes<Feature, Category> implements Serializable {
 	 * @param <Feature>  one of the observed features to subsume the category of the entities to be classified
 	 * @param <Category> one of the possible categories for the entities to be classified
 	 */
-	public static class Trainer<Feature, Category> {
+	public static class Builder<Feature, Category> {
 
 		/**
 		 * The features and their number of occurrences by category of this {@see Trainer}.
@@ -261,7 +261,7 @@ public class NaiveBayes<Feature, Category> implements Serializable {
 		/**
 		 * Default constructor for an empty {@see Trainer}.
 		 */
-		public Trainer() {
+		public Builder() {
 			features = new HashMap<>();
 			totals = new HashMap<>();
 		}
@@ -271,7 +271,7 @@ public class NaiveBayes<Feature, Category> implements Serializable {
 		 *
 		 * @param classifier the {@see Classifier} whose features data is used to initialise this {@see Trainer}
 		 */
-		public Trainer(NaiveBayes<Feature, Category> classifier) {
+		public Builder(Classifier<Feature, Category> classifier) {
 			Objects.requireNonNull(classifier);
 
 			features = new HashMap<>(classifier.features);
@@ -286,7 +286,7 @@ public class NaiveBayes<Feature, Category> implements Serializable {
 		 * @param features the set of features and their number of occurrences
 		 * @return this builder
 		 */
-		public Trainer<Feature, Category> add(Category category, Map<Feature, Double> features) {
+		public Builder<Feature, Category> add(Category category, Map<Feature, Double> features) {
 			Objects.requireNonNull(category);
 			Objects.requireNonNull(features);
 
@@ -305,30 +305,13 @@ public class NaiveBayes<Feature, Category> implements Serializable {
 			return this;
 		}
 
-//		public Trainer<Feature, Category> add(Category category, Feature... features) {
-//			Objects.requireNonNull(category);
-//			Objects.requireNonNull(features);
-//
-//			Map<Feature, Double> current = this.features.get(category);
-//			if (null == current) {
-//				current = new HashMap<>();
-//				this.features.put(category, current);
-//			}
-//			for (Feature feature : features) {
-//				Objects.requireNonNull(feature);
-//				current.put(feature, 1.0 + current.getOrDefault(feature, 0.0));
-//				totals.put(feature, 1.0 + totals.getOrDefault(feature, 0.0));
-//			}
-//			return this;
-//		}
-
 		/**
 		 * Builds a {@see Classifier} with the features data accumulated in this {@see Trainer}.
 		 *
 		 * @return the {@see Classifier} initialised with the features data in this {@see Trainer}
 		 */
-		public NaiveBayes<Feature, Category> build() {
-			return new NaiveBayes<>(this);
+		public Classifier<Feature, Category> build() {
+			return new Classifier<>(this);
 		}
 
 		/**
@@ -337,7 +320,7 @@ public class NaiveBayes<Feature, Category> implements Serializable {
 		 * @param category the category whose features data has to be removed
 		 * @return this builder
 		 */
-		public Trainer remove(Category category) {
+		public Builder remove(Category category) {
 			Objects.requireNonNull(category);
 
 			Map<Feature, Double> current = features.get(category);

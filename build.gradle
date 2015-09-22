@@ -10,6 +10,7 @@
 // Apply the java plugin to add support for Java
 apply plugin: 'java'
 apply plugin: 'idea'
+apply plugin: 'maven'
 apply plugin: 'application'
 
 sourceCompatibility = 1.8
@@ -27,6 +28,8 @@ run {
 }
 
 jar {
+    group = 'bragaglia'
+    version = '0.1.0'
     manifest {
         attributes 'Implementation-Title': rootProject.name, 'Implementation-Version': version
         mainAttributes 'Main-Class': mainClassName

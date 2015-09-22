@@ -90,6 +90,7 @@ public class Dataset<Sample, Category> implements Serializable {
 		if (!map.containsKey(category)) {
 			return 0;
 		}
+		assert map.size() == 2 : "2 documents";
 		return map.get(category).size();
 	}
 

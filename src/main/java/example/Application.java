@@ -7,7 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
-import core.NaiveBayes;
+import core.Classifier;
 import core.Dataset;
 import core.variants.Multinomial;
 
@@ -23,12 +23,12 @@ public class Application {
 		NaiveBagOfWords processor = new NaiveBagOfWords();
 		Multinomial<String> variant = new Multinomial<>();
 
-		NaiveBayes<String, Language> classifier = NaiveBayes.load(PATH);
+		Classifier<String, Language> classifier = Classifier.load(PATH);
 		if (null == classifier) {
 			System.out.println("TRAINING:");
 			long elapsed = System.nanoTime();
 			Dataset<Path, Language> training = prepare("training");
-			classifier = NaiveBayes.learn(training, processor, variant);
+			classifier = Classifier.learn(training, processor, variant);
 			elapsed = System.nanoTime() - elapsed;
 			System.out.format("Training completed in %.3f.\n", elapsed / 1_000_000_000.0);
 			classifier.save(PATH);
@@ -38,7 +38,7 @@ public class Application {
 		System.out.println("\nCONTROLLING:");
 		long elapsed = System.nanoTime();
 		Dataset<Path, Language> control = prepare("control");
-		Map<Language, Map.Entry<Double, Double>> stats = NaiveBayes.test(classifier, control, processor, variant);
+		Map<Language, Map.Entry<Double, Double>> stats = Classifier.test(classifier, control, processor, variant);
 		elapsed = System.nanoTime() - elapsed;
 		System.out.format("Analysis completed in %.3f.\n", elapsed / 1_000_000_000.0);
 
@@ -58,7 +58,7 @@ public class Application {
 			Collections.shuffle(found);
 			for (int i = 0; i < 10; i++) {
 				Path path = found.get(i);
-				Collection<String> raw = processor.analyse(path);
+				Collection<String> raw = processor.process(path);
 				Map<String, Double> features = variant.digest(raw);
 				Language language = classifier.classify(features);
 				System.out.format("File '%s' is %s\n", path, language);

@@ -5,10 +5,10 @@ import java.util.Collection;
 /**
  * TODO Add some meaningful class description...
  */
-public interface Processor<Sample, Feature> {
+public interface Analyser<Sample, Feature> {
 	/**
 	 * @param sample
 	 * @return
 	 */
-	Collection<Feature> analyse(Sample sample);
+	Collection<Feature> process(Sample sample);
 }
