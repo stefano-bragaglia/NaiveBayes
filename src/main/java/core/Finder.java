@@ -5,7 +5,7 @@ import java.util.Collection;
 /**
  * TODO Add some meaningful class description...
  */
-public interface Analyser<Sample, Feature> {
+public interface Finder<Sample, Feature> {
 	/**
 	 * @param sample
 	 * @return

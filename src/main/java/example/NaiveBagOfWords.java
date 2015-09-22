@@ -5,12 +5,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
-import core.Analyser;
+import core.Finder;
 
 /**
  * TODO Add some meaningful class description...
  */
-public class NaiveBagOfWords implements Analyser<Path, String> {
+public class NaiveBagOfWords implements Finder<Path, String> {
 
 	@Override
 	public Collection<String> process(Path path) {

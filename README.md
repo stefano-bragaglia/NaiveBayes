@@ -97,6 +97,70 @@ Last but not least, the class provide two methods to _marshall/unmarshall_ the `
         trainingSet.save(resource);
     }
 
+### Processor
+The `Processor` class provides a unified and generic way to extract the set of _features_ out of a _sample_.
+The task performed by a `Processor<Sample, Feature>` consists in 
+- an optional pre-processing phase (including any number of rewriting steps embodied by instances of the `Refiner<Sample>` class) which attempts to refine the _sample_,
+- a compulsory phase in which all the _features_ of the _sample_ are extracted from its content by means of an instance of `Finder<Sample, Feature>`,
+- another optional post-processing phase (including again any number of steps embodied by instances of the `Refiner<Feature>` class) which attempts to refine each _feature_ singularly, 
+- a mandatory final phase during which each _feature_ is appropriately accounted thanks to a `Variant<Feature>`'s instance. 
+
+    public class Cleaner implements Refiner<String> {
+        @Override
+        public String process(String sample) {
+            Objects.requireNotNull(sample);
+            
+            sample = sample.replaceAll("\"<>#-_!?;:,\\.\\(\\)\\[\\]\\{\\}", " ");
+            String temp;
+            do {
+                temp = sample;
+                sample = temp.replaceAll("  ", " ");
+            } while (!temp.equals(sample));
+            return sample.trim();
+        }
+    }
+    
+    public class Splitter implements Finder<Sample, Feature> {
+        @Override
+        public Collection<String> process(String sample) {
+            Objects.requireNotNull(sample);
+            
+            String[] samples = sample.split(" ");
+            return Arrays.asList(samples);
+        }
+    }
+    
+    public class Stemmer implements Refiner<String> {
+        private static final PorterStemmer STEMMER = new PorterStemmer();
+        @Override
+        public String process(String sample) {
+            Objects.requireNotNull(sample);
+            
+            return STEMMER.stem(sample);
+        }
+    }
+
+    public class Multinomial<Feature> implements Variant<Feature> {
+    	@Override
+    	public Map<Feature, Double> digest(Collection<Feature> features) {
+    		Objects.requireNonNull(features);
+    
+    		Map<Feature, Double> result = new HashMap<>();
+    		for (Feature feature : features) {
+    			Objects.requireNonNull(feature);
+    			result.put(feature, 1.0 + result.getOrDefault(feature, 0.0));
+    		}
+    		return result;
+    	}
+    }
+
+    Processor<String, String> processor = 
+        new Processor.Builder<>(new Splitter(), new Multinomial())
+            .addSampleRefiner(new Cleaner())
+            .addFeatureRefiner(new Stemmer())
+            .build();
+    
+
 ### Classifier
 The `Classifier` class actually implements the Naive Bayes classifier. 
 As for the `Dataset`, it has been made _generic_ to better fit the user's needs.
@@ -108,7 +172,7 @@ For instance, if we plan to use the words as _features_ and the language as _cat
     for (Language category : dataset.categories()) {
         Collection<Path> samples = dataset.getSamples(category);
     	for (Path sample : samples) {
-    		Map<String, Double> features = read(sample);
+    		Map<String, Double> features = processor.process(sample);
     		    builder.add(category, features);
     		}
     	}
@@ -116,7 +180,7 @@ For instance, if we plan to use the words as _features_ and the language as _cat
     Classifier<String, Language> classifier = builder.build();
     
 As for the `Dataset`, `Classifier` comes with two methods to _marshall/unmarshall_ the classifier.
-Moreover it is possible to improve the training of a classifier by passing it to a `Builder`:
+Moreover it is possible to reprise the training of a classifier by passing it to a `Builder`:
 
     Path resource = Paths.get("classifier.dat");
     Classifier<String, Language> classifier = Classifier.load(resource);
@@ -128,8 +192,11 @@ Moreover it is possible to improve the training of a classifier by passing it to
     classifier = builder.build();
     classifier.save(resource);
 
-Notice however that most of the times, you will not need to directly use the `Builder` class since the `Classifier` provides methods for training and testing instances.
+Most of the times, however, you will not need to directly use the `Builder` class since the `Classifier` provides methods for training and testing instances.
 These methods cover classic `learning` against a _training set_, `co-learning` against a _training set_ and a collection of _unclassified samples_ (on it's way!) and `testing` against a _control set_, of course! 
 Since there are several variants of _classifiers_, these methods use    
 
 `Multonomial`, `Binomial` and `Bernoulli` (to come).
+
+### Learning and testing
+qwerty

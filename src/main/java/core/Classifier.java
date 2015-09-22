@@ -4,6 +4,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.Map.Entry;
 
 import example.Language;
 import org.slf4j.Logger;
@@ -67,83 +68,6 @@ public class Classifier<Feature, Category> implements Serializable {
 	}
 
 	/**
-	 * @param dataset
-	 * @param processor
-	 * @param variant
-	 * @param <Sample>
-	 * @param <Feature>
-	 * @param <Category>
-	 * @return
-	 */
-	public static <Sample, Feature, Category> Classifier<Feature, Category> learn(
-			Dataset<Sample, Category> dataset,
-			Analyser<Sample, Feature> processor,
-			Variant<Feature> variant) {
-		Objects.requireNonNull(dataset);
-		Objects.requireNonNull(processor);
-		Objects.requireNonNull(variant);
-
-		Builder<Feature, Category> builder = new Builder<>();
-		for (Category category : dataset.categories()) {
-			Collection<Sample> samples = dataset.getSamples(category);
-			for (Sample sample : samples) {
-				Collection<Feature> raw = processor.process(sample);
-				Map<Feature, Double> features = variant.digest(raw);
-				builder.add(category, features);
-			}
-		}
-		return builder.build();
-	}
-
-	/**
-	 * @param classifier
-	 * @param dataset
-	 * @param processor
-	 * @param variant
-	 * @param <Sample>
-	 * @param <Feature>
-	 * @param <Category>
-	 * @return
-	 */
-	public static <Sample, Feature, Category> Map<Category, Map.Entry<Double, Double>> test(
-			Classifier<Feature, Category> classifier,
-			Dataset<Sample, Category> dataset,
-			Analyser<Sample, Feature> processor,
-			Variant<Feature> variant) {
-		Objects.requireNonNull(classifier);
-		Objects.requireNonNull(dataset);
-		Objects.requireNonNull(processor);
-		Objects.requireNonNull(variant);
-
-		Map<Category, Double> truePos = new HashMap<>();
-		Map<Category, Double> falsePos = new HashMap<>();
-		Map<Category, Double> falseNeg = new HashMap<>();
-		for (Category category : dataset.categories()) {
-			Collection<Sample> samples = dataset.getSamples(category);
-			for (Sample sample : samples) {
-				Collection<Feature> raw = processor.process(sample);
-				Map<Feature, Double> features = variant.digest(raw);
-				Category result = classifier.classify(features);
-				if (result == category) {
-					truePos.put(result, 1.0 + truePos.getOrDefault(result, 0.0));
-				} else {
-					falsePos.put(result, 1.0 + falsePos.getOrDefault(result, 0.0));
-					falseNeg.put(category, 1.0 + falseNeg.getOrDefault(category, 0.0));
-				}
-			}
-		}
-		Map<Category, Map.Entry<Double, Double>> result = new HashMap<>();
-		for (Category category : dataset.categories()) {
-			Double precision = truePos.getOrDefault(category, 0.0) /
-					(truePos.getOrDefault(category, 0.0) + falsePos.getOrDefault(category, 0.0));
-			Double recall = truePos.getOrDefault(category, 0.0) /
-					(truePos.getOrDefault(category, 0.0) + falseNeg.getOrDefault(category, 0.0));
-			result.put(category, new AbstractMap.SimpleImmutableEntry<Double, Double>(precision, recall));
-		}
-		return result;
-	}
-
-	/**
 	 * Returns the most likely {@see Category} for the entity whose set of features and their number of occurrences is
 	 * passed as parameter.
 	 *
@@ -153,20 +77,11 @@ public class Classifier<Feature, Category> implements Serializable {
 	public Category classify(Map<Feature, Double> features) {
 		Objects.requireNonNull(features);
 
-		Map<Category, Double> argmax = new HashMap<>();
-		for (Feature feature : features.keySet()) {
-			Objects.requireNonNull(feature);
-			Double value = features.get(feature);
-			Objects.requireNonNull(value);
-			for (Category category : this.features.keySet()) {
-				double probability = value * Math.log(compute(feature, category));
-				argmax.put(category, argmax.getOrDefault(category, 0.0) + probability);
-			}
-		}
+		Map<Category, Double> argmax = distribution(features);
 		if (0 == argmax.size()) {
 			return null;
 		}
-		ArrayList<Map.Entry<Category, Double>> entries = new ArrayList<>(argmax.entrySet());
+		ArrayList<Entry<Category, Double>> entries = new ArrayList<>(argmax.entrySet());
 		Collections.sort(entries, (o1, o2) -> Double.compare(o2.getValue(), o1.getValue()));
 		return entries.get(0).getKey();
 	}
@@ -177,26 +92,38 @@ public class Classifier<Feature, Category> implements Serializable {
 			throw new IllegalArgumentException("'percent' is not in the range [0.0, 1.0]");
 		}
 
-		Map<Category, Double> argmax = new HashMap<>();
+		Map<Category, Double> argmax = distribution(features);
+		if (0 == argmax.size()) {
+			return null;
+		}
+		ArrayList<Entry<Category, Double>> entries = new ArrayList<>(argmax.entrySet());
+		Collections.sort(entries, (o1, o2) -> Double.compare(o2.getValue(), o1.getValue()));
+		Entry<Category, Double> entry = entries.get(0);
+		if (entries.size() > 1 && (1.0 + percent) * entries.get(1).getValue() >= entry.getValue()) {
+			return null;
+		}
+		return entry.getKey();
+	}
+
+	private Map<Category, Double> distribution(Map<Feature, Double> features) {
+		Objects.requireNonNull(features);
+
+		double total = 0.0;
+		Map<Category, Double> result = new HashMap<>();
 		for (Feature feature : features.keySet()) {
 			Objects.requireNonNull(feature);
 			Double value = features.get(feature);
 			Objects.requireNonNull(value);
 			for (Category category : this.features.keySet()) {
 				double probability = value * Math.log(compute(feature, category));
-				argmax.put(category, argmax.getOrDefault(category, 0.0) + probability);
+				total += probability;
+				result.put(category, result.getOrDefault(category, 0.0) + probability);
 			}
 		}
-		if (0 == argmax.size()) {
-			return null;
-		}
-		ArrayList<Map.Entry<Category, Double>> entries = new ArrayList<>(argmax.entrySet());
-		Collections.sort(entries, (o1, o2) -> Double.compare(o2.getValue(), o1.getValue()));
-		Map.Entry<Category, Double> entry = entries.get(0);
-		if (entries.size() > 1 && (1.0 + percent) * entries.get(1).getValue() >= entry.getValue()) {
-			return null;
-		}
-		return entry.getKey();
+//		for (Category category : result.keySet()) {
+//			result.put(category, result.get(category) / total);
+//		} // The distribution sums up to 1
+		return result;
 	}
 
 	/**
