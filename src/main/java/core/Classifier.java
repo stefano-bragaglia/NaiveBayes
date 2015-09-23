@@ -6,7 +6,6 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.Map.Entry;
 
-import example.Language;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,15 +49,15 @@ public class Classifier<Feature, Category> implements Serializable {
 	 * @param path the {@see Path} to the file whose content has to be loaded in a {@see Classifier}
 	 * @return the {@see Classifier} initialised to the content of the file at the given {@see Path}
 	 */
-	@SuppressWarnings("unchecked")
-	public static Classifier<String, Language> load(Path path) {
+	@SuppressWarnings(value = "uncheked")
+	public static <Feature, Category> Classifier<Feature, Category> load(Path path) {
 		Objects.requireNonNull(path);
 
-		Classifier<String, Language> result = null;
+		Classifier<Feature, Category> result = null;
 		try {
 			InputStream stream = Files.newInputStream(path);
 			ObjectInputStream output = new ObjectInputStream(stream);
-			result = (Classifier<String, Language>) output.readObject();
+			result = (Classifier<Feature, Category>) output.readObject();
 			output.close();
 			stream.close();
 		} catch (ClassNotFoundException | IOException e) {
