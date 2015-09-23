@@ -88,21 +88,18 @@ public class Learning {
 	 * @param classifier
 	 * @param dataset
 	 * @param processor
-	 * @param variant
 	 * @param <Sample>
 	 * @param <Feature>
 	 * @param <Category>
 	 * @return
 	 */
 	public static <Sample, Feature, Category> Map<Category, Map.Entry<Double, Double>> test(
-			Classifier<Feature, Category> classifier,
 			Dataset<Sample, Category> dataset,
-			Finder<Sample, Feature> processor,
-			Variant<Feature> variant) {
+			Processor<Sample, Feature> processor,
+			Classifier<Feature, Category> classifier) {
 		Objects.requireNonNull(classifier);
 		Objects.requireNonNull(dataset);
 		Objects.requireNonNull(processor);
-		Objects.requireNonNull(variant);
 
 		Map<Category, Double> truePos = new HashMap<>();
 		Map<Category, Double> falsePos = new HashMap<>();
@@ -110,8 +107,7 @@ public class Learning {
 		for (Category category : dataset.categories()) {
 			Collection<Sample> samples = dataset.getSamples(category);
 			for (Sample sample : samples) {
-				Collection<Feature> raw = processor.process(sample);
-				Map<Feature, Double> features = variant.digest(raw);
+				Map<Feature, Double> features = processor.process(sample);
 				Category result = classifier.classify(features);
 				if (result == category) {
 					truePos.put(result, 1.0 + truePos.getOrDefault(result, 0.0));
@@ -131,6 +127,5 @@ public class Learning {
 		}
 		return result;
 	}
-
 
 }

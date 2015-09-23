@@ -198,5 +198,6 @@ Since there are several variants of _classifiers_, these methods use
 
 `Multonomial`, `Binomial` and `Bernoulli` (to come).
 
-### Learning and testing
-qwerty
+### Training and testing
+The simplest method to train a model consists in 
+ prepare a training set, a training set is a dataset whose samples have been 
