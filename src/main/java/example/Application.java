@@ -7,10 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
-import core.Classifier;
-import core.Dataset;
-import core.Learning;
-import core.Processor;
+import core.*;
 import core.variants.Multinomial;
 
 /**

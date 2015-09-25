@@ -67,62 +67,112 @@ public class Classifier<Feature, Category> implements Serializable {
 	}
 
 	/**
-	 * Returns the most likely {@see Category} for the entity whose set of features and their number of occurrences is
-	 * passed as parameter.
+	 * MEMENTO add description
+	 * MEMENTO arg may be null
 	 *
-	 * @param features the set of features and their number of occurrences of the entity to be classified
-	 * @return the most likely {@see Category} of the entity to be classified
+	 * @param argmax
+	 * @param <Category>
+	 * @return
 	 */
-	public Category classify(Map<Feature, Double> features) {
-		Objects.requireNonNull(features);
-
-		Map<Category, Double> argmax = distribution(features);
-		if (0 == argmax.size()) {
-			return null;
+	protected static <Category> List<Entry<Category, Double>> sort(Map<Category, Double> argmax) {
+		if (argmax.size() > 0) {
+			List<Entry<Category, Double>> entries = new ArrayList<>(argmax.entrySet());
+			Collections.sort(entries, (o1, o2) -> Double.compare(o2.getValue(), o1.getValue()));
+			return entries;
 		}
-		ArrayList<Entry<Category, Double>> entries = new ArrayList<>(argmax.entrySet());
-		Collections.sort(entries, (o1, o2) -> Double.compare(o2.getValue(), o1.getValue()));
-		return entries.get(0).getKey();
+		return Collections.emptyList();
 	}
 
-	public Category classify(Map<Feature, Double> features, double percent) {
-		Objects.requireNonNull(features);
-		if (percent < 0.0 || percent > 1.0) {
-			throw new IllegalArgumentException("'percent' is not in the range [0.0, 1.0]");
-		}
-
-		Map<Category, Double> argmax = distribution(features);
-		if (0 == argmax.size()) {
-			return null;
-		}
-		ArrayList<Entry<Category, Double>> entries = new ArrayList<>(argmax.entrySet());
-		Collections.sort(entries, (o1, o2) -> Double.compare(o2.getValue(), o1.getValue()));
-		Entry<Category, Double> entry = entries.get(0);
-		if (entries.size() > 1 && (1.0 + percent) * entries.get(1).getValue() >= entry.getValue()) {
-			return null;
-		}
-		return entry.getKey();
-	}
-
-	private Map<Category, Double> distribution(Map<Feature, Double> features) {
-		Objects.requireNonNull(features);
-
-		double total = 0.0;
+	/**
+	 * MEMENTO add description
+	 *
+	 * @param features
+	 * @return
+	 */
+	private Map<Category, Double> aggregate(Map<Feature, Double> features) {
 		Map<Category, Double> result = new HashMap<>();
 		for (Feature feature : features.keySet()) {
 			Objects.requireNonNull(feature);
 			Double value = features.get(feature);
 			Objects.requireNonNull(value);
 			for (Category category : this.features.keySet()) {
-				double probability = value * Math.log(compute(feature, category));
-				total += probability;
+				double probability = value * Math.log(probability(feature, category));
 				result.put(category, result.getOrDefault(category, 0.0) + probability);
 			}
 		}
-//		for (Category category : result.keySet()) {
-//			result.put(category, result.get(category) / total);
-//		} // The distribution sums up to 1
 		return result;
+	}
+
+	/**
+	 * Returns the most likely {@see Category} for the entity whose set of features and their number of occurrences is
+	 * passed as parameter.
+	 *
+	 * @param features the set of features and their number of occurrences of the entity to be classified
+	 * @return the most likely {@see Category} of the entity to be classified
+	 */
+	public Optional<Category> classify(Map<Feature, Double> features) {
+		Objects.requireNonNull(features);
+
+		Map<Category, Double> argmax = aggregate(features);
+		List<Entry<Category, Double>> entries = sort(argmax);
+		return entries.size() > 0 ? Optional.of(entries.get(0).getKey()) : Optional.empty();
+	}
+
+	/**
+	 * Returns the most likely {@see Category} for the entity whose set of features and their number of occurrences is
+	 * passed as parameter.
+	 *
+	 * @param features the set of features and their number of occurrences of the entity to be classified
+	 * @param percent  MEMENTO change the description
+	 * @return the most likely {@see Category} of the entity to be classified
+	 */
+	public Optional<Category> classify(Map<Feature, Double> features, double percent) {
+		Objects.requireNonNull(features);
+		if (percent < 0.0 || percent > 1.0) {
+			throw new IllegalArgumentException("'percent' is not in the range [0.0, 1.0]");
+		}
+
+		Map<Category, Double> argmax = aggregate(features);
+		List<Entry<Category, Double>> entries = sort(argmax);
+		if (!entries.isEmpty()) {
+			Entry<Category, Double> entry = entries.get(0);
+			if (entries.size() > 1 && (1.0 + percent) * entries.get(1).getValue() >= entry.getValue()) {
+				return Optional.empty();
+			}
+			return Optional.of(entry.getKey());
+		}
+		return Optional.empty();
+	}
+
+	/**
+	 * MEMENTO add description
+	 *
+	 * @param features
+	 * @return
+	 */
+	protected Map<Category, Double> distribution(Map<Feature, Double> features) {
+		Objects.requireNonNull(features);
+
+		Map<Category, Double> result = aggregate(features);
+		double sum = result.values().stream().mapToDouble(x -> x).sum();
+		for (Category category : result.keySet()) {
+			result.put(category, result.getOrDefault(category, 0.0) / sum);
+		}
+		return result;
+	}
+
+	/**
+	 * MEMENTO add description
+	 *
+	 * @param features
+	 * @return
+	 */
+	protected Optional<Entry<Category, Double>> evaluate(Map<Feature, Double> features) {
+		Objects.requireNonNull(features);
+
+		Map<Category, Double> argmax = distribution(features);
+		List<Entry<Category, Double>> entries = sort(argmax);
+		return entries.size() > 0 ? Optional.of(entries.get(0)) : Optional.empty();
 	}
 
 	/**
@@ -135,7 +185,7 @@ public class Classifier<Feature, Category> implements Serializable {
 	 * @return the probability of the given {@see Feature} to occur in an entity pertaining to the given {@see
 	 * Category}
 	 */
-	public double compute(Feature feature, Category category) {
+	public double probability(Feature feature, Category category) {
 		Objects.requireNonNull(feature);
 		Objects.requireNonNull(category);
 		if (!features.containsKey(category)) {

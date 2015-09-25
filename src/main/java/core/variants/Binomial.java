@@ -7,7 +7,7 @@ import core.Variant;
 /**
  * TODO Add some meaningful class description...
  */
-public class Binarized<Feature> implements Variant<Feature> {
+public class Binomial<Feature> implements Variant<Feature> {
 
 	@Override
 	public Map<Feature, Double> digest(Collection<Feature> features) {

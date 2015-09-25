@@ -2,10 +2,15 @@ package core;
 
 import java.util.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * TODO Add some meaningful class description...
  */
 public class Learning {
+
+	private static final Logger logger = LoggerFactory.getLogger(Learning.class);
 
 	/**
 	 * @param training
@@ -21,6 +26,7 @@ public class Learning {
 		Objects.requireNonNull(training);
 		Objects.requireNonNull(processor);
 
+		long elapsed = System.nanoTime();
 		Classifier.Builder<Feature, Category> builder = new Classifier.Builder<>();
 		for (Category category : training.categories()) {
 			Collection<Sample> samples = training.getSamples(category);
@@ -29,7 +35,10 @@ public class Learning {
 				builder.add(category, features);
 			}
 		}
-		return builder.build();
+		Classifier<Feature, Category> classifier = builder.build();
+		elapsed = System.nanoTime() - elapsed;
+		logger.info("The classifier for {} has been trained in {}s", processor, String.format("%.3f", elapsed / 1_000_000_000.0));
+		return classifier;
 	}
 
 	/**
@@ -54,6 +63,7 @@ public class Learning {
 		}
 		Objects.requireNonNull(processors);
 
+		long elapsed = System.nanoTime();
 		Map<Processor<Sample, Feature>, Classifier<Feature, Category>> classifiers = new HashMap<>();
 		for (int k = 0; k < iterations; k++) {
 			for (Processor<Sample, Feature> processor : processors) {
@@ -81,6 +91,8 @@ public class Learning {
 				}
 			}
 		}
+		elapsed = System.nanoTime() - elapsed;
+		logger.info("The classifier for {} has been cotrained in {}s", training, String.format("%.3f", elapsed / 1_000_000_000.0));
 		return classifiers.values();
 	}
 
@@ -101,6 +113,7 @@ public class Learning {
 		Objects.requireNonNull(dataset);
 		Objects.requireNonNull(processor);
 
+		long elapsed = System.nanoTime();
 		Map<Category, Double> truePos = new HashMap<>();
 		Map<Category, Double> falsePos = new HashMap<>();
 		Map<Category, Double> falseNeg = new HashMap<>();
@@ -117,14 +130,22 @@ public class Learning {
 				}
 			}
 		}
-		Map<Category, Map.Entry<Double, Double>> result = new HashMap<>();
+		Map<Category, Map.Entry<Double, Double>> result = new TreeMap<>();
 		for (Category category : dataset.categories()) {
 			Double precision = truePos.getOrDefault(category, 0.0) /
 					(truePos.getOrDefault(category, 0.0) + falsePos.getOrDefault(category, 0.0));
+			if (Double.isNaN(precision)) {
+				precision = 0.0;
+			}
 			Double recall = truePos.getOrDefault(category, 0.0) /
 					(truePos.getOrDefault(category, 0.0) + falseNeg.getOrDefault(category, 0.0));
+			if (Double.isNaN(recall)) {
+				recall = 0.0;
+			}
 			result.put(category, new AbstractMap.SimpleImmutableEntry<Double, Double>(precision, recall));
 		}
+		elapsed = System.nanoTime() - elapsed;
+		logger.info("The classifier for {} has been tested in {}s", processor, String.format("%.3f", elapsed / 1_000_000_000.0));
 		return result;
 	}
 

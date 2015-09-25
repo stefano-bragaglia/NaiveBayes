@@ -94,6 +94,17 @@ public class Dataset<Sample, Category> implements Serializable {
 		return map.get(category).size();
 	}
 
+	public boolean contains(Sample sample) {
+		Objects.requireNonNull(sample);
+
+		for (Set<Sample> samples : map.values()) {
+			if (samples.contains(sample)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public Collection<Category> categories() {
 		return map.keySet();
 	}
