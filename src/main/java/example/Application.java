@@ -7,7 +7,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
-import core.*;
+import core.Classifier;
+import core.Dataset;
+import core.Learning;
+import core.Processor;
 import core.variants.Multinomial;
 
 /**
@@ -58,8 +61,13 @@ public class Application {
 			for (int i = 0; i < 10; i++) {
 				Path path = found.get(i);
 				Map<String, Double> features = processor.process(path);
-				Language language = classifier.classify(features);
-				System.out.format("File '%s' is %s\n", path, language);
+
+				Optional<Language> optional = classifier.classify(features);
+				if (optional.isPresent()) {
+					System.out.format("File '%s' is %s\n", path, optional.get());
+				} else {
+					System.out.format("File '%s' was not recognised\n", path);
+				}
 			}
 		} catch (IOException e) {
 			e.printStackTrace();

@@ -81,12 +81,15 @@ public class Learning {
 				for (int i = 0; i < processors.length; i++) {
 					Map<Feature, Double> features = processors[i].process(sample);
 					Classifier<Feature, Category> classifier = classifiers.get(processors[i]);
-					Category category = classifier.classify(features);
-					List<Processor<Sample, Feature>> available = needed.get(category);
-					if (available.contains(processors[i])) {
-						training.add(category, sample);
-						available.remove(processors[i]);
-						break;
+					Optional<Category> optional = classifier.classify(features);
+					if (optional.isPresent()) {
+						Category category = optional.get();
+						List<Processor<Sample, Feature>> available = needed.get(category);
+						if (available.contains(processors[i])) {
+							training.add(category, sample);
+							available.remove(processors[i]);
+							break;
+						}
 					}
 				}
 			}
@@ -121,11 +124,16 @@ public class Learning {
 			Collection<Sample> samples = dataset.getSamples(category);
 			for (Sample sample : samples) {
 				Map<Feature, Double> features = processor.process(sample);
-				Category result = classifier.classify(features);
-				if (result == category) {
-					truePos.put(result, 1.0 + truePos.getOrDefault(result, 0.0));
+				Optional<Category> optional = classifier.classify(features);
+				if (optional.isPresent()) {
+					Category result = optional.get();
+					if (result == category) {
+						truePos.put(result, 1.0 + truePos.getOrDefault(result, 0.0));
+					} else {
+						falsePos.put(result, 1.0 + falsePos.getOrDefault(result, 0.0));
+						falseNeg.put(category, 1.0 + falseNeg.getOrDefault(category, 0.0));
+					}
 				} else {
-					falsePos.put(result, 1.0 + falsePos.getOrDefault(result, 0.0));
 					falseNeg.put(category, 1.0 + falseNeg.getOrDefault(category, 0.0));
 				}
 			}
