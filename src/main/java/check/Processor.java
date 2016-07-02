@@ -1,7 +1,11 @@
-package core;
+package check;
 
 import java.io.Serializable;
 import java.util.*;
+
+import api.Finder;
+import api.Refiner;
+import api.Variant;
 
 /**
  * TODO Add some meaningful class description...

@@ -3,14 +3,17 @@ package example;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
 
-import core.Finder;
+import api.Finder;
 
 /**
  * TODO Add some meaningful class description...
  */
-public class NaiveBagOfWords implements Finder<Path, String> {
+public class BagOfWords implements Finder<Path, String> {
 
 	@Override
 	public Collection<String> process(Path path) {
@@ -20,16 +23,11 @@ public class NaiveBagOfWords implements Finder<Path, String> {
 		try {
 			List<String> lines = Files.readAllLines(path);
 			for (String line : lines) {
-				line = line.toLowerCase();
-				line = line.replaceAll("[,;\\.!?:_\"']", " ");
-				line = line.replaceAll("↑", "*");
-				String temp;
-				do {
-					temp = line;
-					line = temp.replaceAll("  ", " ");
-				} while (!temp.equals(line));
-				String[] words = line.split(" ");
-				Collections.addAll(result, words);
+				for (String word : line.split("\\P{LD}+")) {
+					if (!word.matches("^\\d+$")) {
+						result.add(word);
+					}
+				}
 			}
 		} catch (IOException e) {
 			e.printStackTrace();

@@ -7,11 +7,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
-import core.Classifier;
-import core.Dataset;
-import core.Learning;
-import core.Processor;
-import core.variants.Multinomial;
+import api.Classifier;
+import api.Dataset;
+import check.Learning;
+import check.Processor;
+import api.variants.Multinomial;
 
 /**
  * TODO Add some meaningful class description...
@@ -23,7 +23,7 @@ public class Application {
 
 	public static void main(String[] args) throws IOException {
 		Processor<Path, String> processor =
-				new Processor.Builder<Path, String>(new NaiveBagOfWords(), new Multinomial()).build();
+				new Processor.Builder<>(new BagOfWords(), new Multinomial()).build();
 
 		Classifier<String, Language> classifier = Classifier.load(PATH);
 		if (null == classifier) {

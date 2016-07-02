@@ -1,10 +1,11 @@
-package core;
+package api;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
+import check.Processor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
