@@ -12,6 +12,8 @@ import core.Variant;
  */
 public class Multinomial<Feature> implements Variant<Feature> {
 
+	private static final long serialVersionUID = 6297472457709950780L;
+
 	@Override
 	public Map<Feature, Double> digest(Collection<Feature> features) {
 		Objects.requireNonNull(features);

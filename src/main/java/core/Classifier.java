@@ -242,6 +242,14 @@ public class Classifier<Feature, Category> implements Serializable {
 			totals = new HashMap<>();
 		}
 
+		private Builder(Map<Category, Map<Feature, Double>> features, Map<Feature, Double> totals) {
+			Objects.requireNonNull(features);
+			Objects.requireNonNull(totals);
+
+			this.features = new HashMap<>(features);
+			this.totals = new HashMap<>(totals);
+		}
+
 		/**
 		 * Default constructor for a {@see Trainer} initialised to the content of the given {@see Classifier}.
 		 *
@@ -279,6 +287,41 @@ public class Classifier<Feature, Category> implements Serializable {
 				totals.put(feature, value + totals.getOrDefault(feature, 0.0));
 			}
 			return this;
+		}
+
+		public Builder<Feature, Category> applyTFIDF() {
+
+//			private final Map<Category, Map<Feature, Double>> features;
+
+			double n = features.size(); // number of categories;
+			Map<Feature, Double> frequency = new HashMap<>(); // count of appearances
+			for (Map<Feature, Double> values : features.values()) {
+				for (Feature feature : values.keySet()) {
+					frequency.put(feature, 1.0 + frequency.getOrDefault(feature, 0.0));
+				}
+			}
+
+			Map<Feature, Double> newTotals = new HashMap<>();
+			Map<Category, Map<Feature, Double>> newFeatures = new HashMap<>();
+			for (Category category : features.keySet()) {
+				Map<Feature, Double> values = features.get(category);
+				for (Feature feature : values.keySet()) {
+					double value = frequency.getOrDefault(feature, n);
+					if (value < n) {
+
+						Map<Feature, Double> newValues = newFeatures.get(category);
+						if (null == newValues) {
+							newValues = new HashMap<>();
+							newFeatures.put(category, newValues);
+						}
+						double newValue = Math.log(n / frequency.get(feature)) * values.get(feature);
+						newValues.put(feature, newValue);
+						newTotals.put(feature, newValue + newTotals.getOrDefault(feature, 0.0));
+					}
+				}
+			}
+
+			return new Builder<>(newFeatures, newTotals);
 		}
 
 		/**

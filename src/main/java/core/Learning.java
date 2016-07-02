@@ -37,7 +37,7 @@ public class Learning {
 		}
 		Classifier<Feature, Category> classifier = builder.build();
 		elapsed = System.nanoTime() - elapsed;
-		logger.info("The classifier for {} has been trained in {}s", processor, String.format("%.3f", elapsed / 1_000_000_000.0));
+		logger.info("The classifier for {} has been trained in {}s", processor.getClass().getSimpleName(), String.format("%.3f", elapsed / 1_000_000_000.0));
 		return classifier;
 	}
 
@@ -153,7 +153,7 @@ public class Learning {
 			result.put(category, new AbstractMap.SimpleImmutableEntry<Double, Double>(precision, recall));
 		}
 		elapsed = System.nanoTime() - elapsed;
-		logger.info("The classifier for {} has been tested in {}s", processor, String.format("%.3f", elapsed / 1_000_000_000.0));
+		logger.info("The classifier for {} has been tested in {}s", processor.getClass().getSimpleName(), String.format("%.3f", elapsed / 1_000_000_000.0));
 		return result;
 	}
 

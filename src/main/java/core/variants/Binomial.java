@@ -9,6 +9,8 @@ import core.Variant;
  */
 public class Binomial<Feature> implements Variant<Feature> {
 
+	private static final long serialVersionUID = -5362979526653488866L;
+
 	@Override
 	public Map<Feature, Double> digest(Collection<Feature> features) {
 		Objects.requireNonNull(features);

@@ -123,7 +123,7 @@ public class Search {
 				if (null != reader) {
 					reader.close();
 				}
-				if (null == stream) {
+				if (null != stream) {
 					stream.close();
 				}
 			} catch (IOException ignored) {

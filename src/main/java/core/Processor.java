@@ -1,11 +1,14 @@
 package core;
 
+import java.io.Serializable;
 import java.util.*;
 
 /**
  * TODO Add some meaningful class description...
  */
-public class Processor<Sample, Feature> {
+public class Processor<Sample, Feature> implements Serializable {
+
+	private static final long serialVersionUID = 8866210182375973074L;
 
 	private final ArrayList<Refiner<Sample>> sampleRefiners;
 

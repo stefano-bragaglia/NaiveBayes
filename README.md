@@ -1,6 +1,98 @@
 # NaiveBayes
 Java Framework for Naive Bayes classifiers
 
+
+##Some Theory
+**Naive Bayesian classifiers** are very popular because their models are easy to build (requiring no complicated iterative parameter estimation) which makes them particularly suitable for large datasets.
+Despite their simplicity, the *Naive Bayesian classifiers* are often surprisingly good and they usually outperforms other more sophisticated classification methods.
+
+As their name suggests, the *Naive Bayesian classifier* is based on the **Bayes' theorem** *with independence assumption between predictors* (see later).
+
+The formula of this theorem is the following:
+
+              P(x|c) • P(c)
+    P(c|x) = ---------------
+                  P(x)
+
+where
+- **P(c)** is the *prior probability* (or *marginal probability*) of the *class* **c**
+- **P(x)** is the *prior probability* (or *marginal probability*) of the *predictor* (or *attribute*) **x**
+- **P(x|c)** is the *likelihood* (or *conditional probability*) of the *predictor* (or *attribute*) **x** given *class* **c**
+and
+- **P(c|x)** is the *posterior probability* (or *conditional probability*) of the *class* **c** given *predictor* (or *attribute*) **x** 
+which provide a way of calculating the posterior probability `P(c|x)` from `P(c)`, `P(x)`, and `P(x|c)`.
+
+This formula derives from the simpler formula for **conditional probability**:
+
+              P(a∩b)
+    P(a|b) = --------
+               P(b)
+
+Similarly, however
+
+              P(b∩a)     P(a∩b)
+    P(b|a) = -------- = --------
+               P(a)       P(a)
+
+By equating the term `P(a∩b)` in both formulas, one may obtain:
+
+    P(a|b) • P(b) = P(b|a) • P(a)  
+
+which leads to the *Bayes' theorem* formula.
+
+####Example
+In order to make clear how the *Bayes' theorem* works, consider the following example.
+
+*In a school, the 60% of the students is male and the remaining 40% female.*
+*Half of the female students wear trousers (50%) and the other half skirts (50%), while all the male students wear trousers (100%).*
+*Suppose you see a student wearing trousers from away: what is the probability that she (he) is female (male)?*
+
+What we what to discover is the **posterior probability** that the student is female/male given the fact that wears trousers (`P(female|trousers)` and `P(male|trousers)`).
+We know that
+- **P(female)** `= 40% = 2/5`
+- **P(male)** `= 60% = 3/5`
+- **P(trouser|female)** `= 50% = 1/2`
+- **P(trouser|male)** `= 100% = 1`
+- **P(trousers)** `= 50% • 40% + 100% • 60% = 20% + 60% = 80% = 4/5`
+therefore we can derive the following:
+
+                          1/2 • 2/5                                 1 • 3/5
+    P(female|trousers) = ----------- = 1/4 ,    P(male|trousers) = --------- = 3/4  
+                             4/5                                      4/5
+
+
+###Assumption of Independence between Predictors
+*With reference to the above example, suppose that the school is attended either by middle-school and high-school students.*
+*The middle-school students are the 75% of all the students and wear blue uniforms. High-school students (25%) wear red uniforms instead.*
+*What is the probability that a student is female (male) if we see from away her (him) wearing blue trousers?* 
+
+In this case, we are looking for the **posterior probability** that the student is female/male given the fact that wears trousers and that the uniform is blue (`P(female|trousers|blue)` and `P(male|trousers|blue)`).
+Let's consider `P(female|trousers|blue)` first. If we expand the *Bayes' theorem*, we obtain the following:
+
+                               P(blue|female|trousers) • P(blue)
+    P(female|trousers|blue) = -----------------------------------
+                                      P(female|trousers)
+
+We know that **P(blue)** `= 70% = 3/4` and **P(female|trousers)** `= 1/4` from above but unfortunately the problems does not tell us how many middle-school students (blue uniforms) are female and wearing trousers (`P(blue|female|trousers)`).
+Without that value, we can not apply the *Bayes' theorem* and we are stuck. But how about we consider wearing blue/red uniforms and trousers/skirts two completely uncorrelated facts?
+
+Such assumption, which goes by the name **independence assumption between predictors**, allows to solve the problem with the data we have **but the answer will only be an esteem and not actually the sought probability**.
+In same cases like this example in which the exact probability is needed, this assumption does not make sense but in other cases like **classification tasks** it does.
+If you want to **guess the category to which a given sample pertains given some features whose probability is known**, instead, it's safe and sound since the proportion between the likelihood of the possible categories are kept despite the exact values are missing.  
+
+In case we have *several predictors*, the **Bayes' theorem under the independence assumption between predictors** specialises as follows:
+ 
+ 
+ 
+
+Naive Bayes classifier assume that the effect of the value of a predictor (x) on a given class (c) is independent of the values of other predictors. This assumption is called class conditional independence.
+
+
+
+
+
+
+
     classify( f_1, ..., f_n ) = argmax_c p(C = c) 
     
 - **F_1, ..., F_n:** list of features 
@@ -201,3 +293,5 @@ Since there are several variants of _classifiers_, these methods use
 ### Training and testing
 The simplest method to train a model consists in 
  prepare a training set, a training set is a dataset whose samples have been 
+ Simple training
+ 
