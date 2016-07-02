@@ -56,9 +56,9 @@ We know that
 - **P(trousers)** `= 50% • 40% + 100% • 60% = 20% + 60% = 80% = 4/5`
 therefore we can derive the following:
 
-                          1/2 • 2/5                                 1 • 3/5
-    P(female|trousers) = ----------- = 1/4 ,    P(male|trousers) = --------- = 3/4  
-                             4/5                                      4/5
+                           1/2 • 2/5                                 1 • 3/5
+     P(female|trousers) = ----------- = 1/4 ,    P(male|trousers) = --------- = 3/4  
+                              4/5                                      4/5
 
 
 ###Assumption of Independence between Predictors
