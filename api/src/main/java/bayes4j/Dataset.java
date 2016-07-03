@@ -16,7 +16,8 @@ public interface Dataset<Sample, Category> extends Serializable {
 
     /**
      * Appends the given {@code sample} to the collection of {@link Sample} instances associated to the specified
-     * {@link Category}. If such collection does not exists, it is automatically created.
+     * {@code category}. If such collection does not exists, it is automatically created.
+     * Both the {@code category} and the {@code sample} must be not null and not empty.
      *
      * @param category the {@link Category} to which to append the {@code sample}
      * @param sample   the {@link Sample} to append
@@ -25,7 +26,8 @@ public interface Dataset<Sample, Category> extends Serializable {
 
     /**
      * Appends the given collections of {@code samples} to the collection of {@link Sample} instances associated to
-     * the specified {@link Category}. If such collection does not exists, it is automatically created.
+     * the specified {@code category}. If such collection does not exists, it is automatically created.
+     * Both the {@code category} and the {@code samples} must be not null and not empty.
      *
      * @param category the {@link Category} to which to append the {@code samples}
      * @param samples  the {@link Sample} instances to append
@@ -41,8 +43,7 @@ public interface Dataset<Sample, Category> extends Serializable {
 
     /**
      * Returns the collections of {@link Sample} instances associated to the given {@code category} currently
-     * included in this dataset. If the given {@code category} is not found in this dataset, an empty collection
-     * is returned.
+     * included in this dataset. If the given {@code category} is not found, an empty collection is returned.
      *
      * @param category the {@link Category} whose associated {@link Sample} instances are being returned
      *
@@ -59,7 +60,8 @@ public interface Dataset<Sample, Category> extends Serializable {
     int size();
 
     /**
-     * Saves this dataset to a file at the given {@code path}
+     * Saves this dataset to a file at the given {@code path}.
+     * The {@code path} must be not null and valid.
      *
      * @param path the {@link Path} where to save this dataset
      */
