@@ -1,0 +1,19 @@
+apply plugin: 'application'
+
+applicationDefaultJvmArgs = []
+
+mainClassName = 'application.Example'
+
+run {
+    // args 'some input'.split()
+}
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': rootProject.name, 'Implementation-Version': version
+    }
+}
+
+dependencies {
+    compile project (':core')
+}
