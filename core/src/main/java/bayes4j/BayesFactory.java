@@ -14,6 +14,7 @@ import static java.util.Objects.requireNonNull;
 public final class BayesFactory {
 
     private BayesFactory() {
+        throw new UnsupportedOperationException("'BayesFactory' shouldn't be instantiated");
     }
 
     /**
@@ -44,7 +45,6 @@ public final class BayesFactory {
         try {
             InputStream stream = Files.newInputStream(path);
             ObjectInputStream output = new ObjectInputStream(stream);
-            Object object = output.readObject();
             result = (Dataset<Sample, Category>) output.readObject();
             output.close();
             stream.close();

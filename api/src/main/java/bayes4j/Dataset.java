@@ -1,5 +1,6 @@
 package bayes4j;
 
+import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.Collection;
 
@@ -11,7 +12,7 @@ import java.util.Collection;
  * @param <Sample>   an observation within a population containing a collection of distinctive features
  * @param <Category> a class that collects a population of observations that share a common property
  */
-public interface Dataset<Sample, Category> {
+public interface Dataset<Sample, Category> extends Serializable {
 
     /**
      * Appends the given {@code sample} to the collection of {@link Sample} instances associated to the specified

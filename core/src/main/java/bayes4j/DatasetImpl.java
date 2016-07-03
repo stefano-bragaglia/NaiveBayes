@@ -22,6 +22,8 @@ import static java.util.Objects.requireNonNull;
  */
 public final class DatasetImpl<Sample, Category> implements Dataset<Sample, Category> {
 
+    private static final long serialVersionUID = -2209582602204320299L;
+
     private final Map<Category, Set<Sample>> samplesByCategory;
 
     DatasetImpl() {
@@ -78,4 +80,28 @@ public final class DatasetImpl<Sample, Category> implements Dataset<Sample, Cate
         }
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        DatasetImpl<?, ?> dataset = (DatasetImpl<?, ?>) o;
+        return samplesByCategory.equals(dataset.samplesByCategory);
+    }
+
+    @Override
+    public int hashCode() {
+        return samplesByCategory.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "DatasetImpl{" +
+               "samplesByCategory=" + samplesByCategory +
+               '}';
+    }
 }
